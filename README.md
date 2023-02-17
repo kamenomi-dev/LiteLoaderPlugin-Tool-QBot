@@ -1,2 +1,2 @@
-# whiteListUltra-LiteLoaderPlugin-QBot
-A QBot for the WhiteList Ultra Minecraft Bedrock Edition Plugin
+# LiteLoaderPlugin-Tool-QBot
+A QBot for the Minecraft Bedrock Edition Plugin.
