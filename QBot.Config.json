@@ -1,0 +1,21 @@
+{
+  "AllowCommonFunCommand": true,
+  "QBotDataInfo": {
+    "QNickName": "OrzAzzz",
+    "QUin": 0,
+    "QPassword": ""
+  },
+  "IsSingleMode": true,
+  "Single": {
+    "allowGroupsId": [
+      0
+    ],
+    "allowCommands": [
+      "say",
+      "说"
+    ],
+    "serversPath": [],
+    "plugin": "",
+    "groupsCallbackScript": "./dist/groups/QBot.FureServerBedrock.js"
+  }
+}

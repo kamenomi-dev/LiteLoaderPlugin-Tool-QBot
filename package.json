@@ -1,0 +1,19 @@
+{
+  "type": "module",
+  "name": "oicq-template",
+  "version": "1.0.0",
+  "description": "",
+  "main": "QBot.js",
+  "scripts": {
+    "dev": "node ./src/QBot.core.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "nodejs": "^0.0.0",
+    "oicq": "^2.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^16.6.1"
+  }
+}
