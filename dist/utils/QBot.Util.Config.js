@@ -1,27 +1,20 @@
-import { readFileSync } from 'node:fs';
-export class QUtilConfig_ {
-    UtilConfig;
-    constructor() { this.reload(); }
-    ;
-    reload() {
+import { existsSync, readFileSync, writeFileSync } from "fs";
+export class CQUtilConfig {
+    QBotConfig;
+    constructor() {
+        if (!existsSync('./QBot.Config.json'))
+            throw Error('QBot.Config.json isn\'t exist! Please, try to download again.');
         try {
-            this.UtilConfig = JSON.parse(readFileSync('./QBot.Config.json', { encoding: 'utf-8' }));
+            this.QBotConfig = JSON.parse(readFileSync('./QBot.Config.json').toString('utf-8'));
         }
         catch {
-            throw Error('[QBot] Language of QBot.Config.json is not a JSON! ');
+            throw Error('QBot.Config.json isn\'t a JSON File! ');
         }
         ;
-        if (!this.UtilConfig) {
-            throw Error('[QBot] QBot.Config.json read failed! ');
-        }
-        ;
-        return true;
     }
     ;
-    setConfig(QConfig) {
+    save() {
+        writeFileSync('./QBot.Config.json', this.QBotConfig.toString());
     }
-    ;
-    getConfig() { return this.UtilConfig; }
-    ;
 }
 ;

@@ -1,30 +1,36 @@
 import { Platform, createClient } from "oicq";
-import { QGroupIndex_ } from "./groups/QBot.GroupsIndex.js";
-import { QUtilConfig_ } from "./utils/QBot.Util.Config.js";
-const QUtilConfig = new QUtilConfig_();
-var QBotDataInfo = QUtilConfig.UtilConfig.QBotDataInfo;
-const QClient = createClient(QBotDataInfo.QUin, {
-    "platform": Platform.Android,
+import { CQGroupIndex } from "./plugins/QBot.GroupsIndex.js";
+import { CQUtilConfig } from "./utils/QBot.Util.Config.js";
+const QUtilConfig = new CQUtilConfig();
+var QBotDataInfo = QUtilConfig.QBotConfig;
+const QClient = createClient(QBotDataInfo.QBotUin, {
+    "platform": Platform.Watch,
     "ignore_self": true
 });
-const QGroupIndex = new QGroupIndex_(QClient, QUtilConfig.UtilConfig);
+const QGroupIndex = new CQGroupIndex(QClient, QUtilConfig.QBotConfig);
 initQBot();
 function initQBot() {
     QClient.on('system.login.qrcode', function (QRcodeBuff) {
         this.logger.info('[QBot] before login! press \'Enter\' to continue to login.');
-        process.stdin.once('data', () => { this.login(QBotDataInfo.QPassword); });
-    }).login(QBotDataInfo.QPassword);
+        process.stdin.once('data', () => { this.login(); });
+        QClient.on('system.login.slider', function (checkUrl) {
+            this.logger.mark(`[QBot] input the Ticket and press \'Enter\'`);
+            process.stdin.once('data', ticket => {
+                this.submitSlider(ticket.toString());
+            });
+        });
+    }).login(QBotDataInfo.QBotPassword);
     QClient.on('system.online', function () {
         this.logger.info('[QBot] Successfully login! ');
         ;
         (() => {
-            if (!QUtilConfig.reload()) {
+            if (!QUtilConfig.QBotConfig) {
                 this.logger.info('[QBot] Failed to load Config! ');
                 return;
             }
-            this.logger.mark(QUtilConfig.UtilConfig);
+            this.logger.mark(QUtilConfig);
             this.logger.info('[QBot] Loaded Config! ');
-            this.setNickname(QBotDataInfo.QNickName);
+            this.setNickname(QBotDataInfo.QBotNickName);
         })();
     });
 }

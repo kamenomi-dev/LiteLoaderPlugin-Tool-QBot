@@ -1,21 +1,62 @@
 {
-  "AllowCommonFunCommand": true,
-  "QBotDataInfo": {
-    "QNickName": "OrzAzzz",
-    "QUin": 0,
-    "QPassword": ""
-  },
-  "IsSingleMode": true,
-  "Single": {
-    "allowGroupsId": [
-      0
-    ],
-    "allowCommands": [
-      "say",
-      "说"
-    ],
-    "serversPath": [],
-    "plugin": "",
-    "groupsCallbackScript": "./dist/groups/QBot.FureServerBedrock.js"
+  "QBotNickName": "QBot",
+  "QBotUin": 0,
+  "QBotPassword": "",
+  "PluginConfig": {
+    "IsSinglePlugin": true,
+    "SinglePlugin": {
+      "AllowGroupId": [],
+      "AllowCommands": [
+        {
+          "Permission": "User",
+          "Command": "帮助",
+          "Alias": "help",
+          "CallbackId": 0
+        },
+        {
+          "Permission": "User",
+          "Command": "设备状态",
+          "Alias": "devicestatus",
+          "CallbackId": 1
+        },
+        {
+          "Permission": "User",
+          "Command": "今日作业",
+          "Alias": "homework",
+          "CallbackId": 2
+        }
+      ],
+      "Name": "ClassQBotPlugin",
+      "ProcessorScript": "./dist/plugins/QBot.Group.xxx.js",
+      "ControlServerPath": "这里是为了对接 Minecraft 插件图省事用的，为空就行"
+    },
+    "MultiPlugins": [
+      {
+        "AllowGroupId": [],
+        "AllowCommands": [
+          {
+            "Permission": "User",
+            "Command": "测试1",
+            "Alias": "test1",
+            "CallbackId": 0
+          }
+        ],
+        "Name": "MutliTest1",
+        "ProcessorScript": "./dist/plugins/QBot.Group.MutliTest1.js"
+      },
+      {
+        "AllowGroupId": [],
+        "AllowCommands": [
+          {
+            "Permission": "User",
+            "Command": "测试2",
+            "Alias": "test2",
+            "CallbackId": 0
+          }
+        ],
+        "Name": "MutliTest1",
+        "ProcessorScript": "./dist/plugins/QBot.Group.MutliTest2.js"
+      }
+    ]
   }
 }

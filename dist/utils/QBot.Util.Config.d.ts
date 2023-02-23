@@ -1,23 +1,28 @@
-export declare class QUtilConfig_ {
-    UtilConfig: TQConfig;
+export declare class CQUtilConfig {
+    QBotConfig: TQBotConfig;
     constructor();
-    reload(): boolean;
-    setConfig(QConfig: TQConfig): void;
-    getConfig(): TQConfig;
+    save(): void;
 }
-export type TQConfig = {
-    AllowCommonFunCommand: boolean;
-    QBotDataInfo: {
-        QNickName: string;
-        QUin: number;
-        QPassword: string;
+export type TQBotConfig = {
+    QBotNickName: string;
+    QBotUin: number;
+    QBotPassword: string;
+    PluginConfig: {
+        IsSinglePlugin: true;
+        SinglePlugin: TPluginConfig;
+        MultiPlugins: TPluginConfig[];
     };
-    IsSingleMode: boolean;
-    Single: {
-        allowGroupsId: Array<number>;
-        allowCommands: Array<string>;
-        serversPath: Array<string>;
-        plugin: string;
-        groupsCallbackScript: string;
-    };
+};
+export type TPluginConfig = {
+    AllowGroupId: number[];
+    AllowCommands: TAllowCommand[];
+    Name: string;
+    ProcessorScript: string;
+    ControlServerPath: string;
+};
+export type TAllowCommand = {
+    Permission: 'User' | 'Admin' | 'Owner';
+    Command: string;
+    Alias: string;
+    CallbackId: number;
 };

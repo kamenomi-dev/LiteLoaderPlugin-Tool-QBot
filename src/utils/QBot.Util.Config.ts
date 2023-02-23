@@ -1,62 +1,41 @@
-// import { QClient } from "../QBot.Core.js";
-import { readFileSync, writeFile } from 'node:fs';
-import { Client } from 'oicq';
+import { existsSync, readFileSync, writeFileSync } from "fs";
 
-export class QUtilConfig_ {
-  public UtilConfig!: TQConfig;
-  constructor() { this.reload() };
-
-  /**
-   * @Todo 2023 02 18 Added For QBot command.
-   * 
-   * @description to reload the local Config file.
-   * @returns boolean
-   */
-  public reload(): boolean { // [Todo] Command 配置重载
+export class CQUtilConfig {
+  public QBotConfig: TQBotConfig;
+  public constructor() {
+    if (!existsSync('./QBot.Config.json'))
+      throw Error('QBot.Config.json isn\'t exist! Please, try to download again.');
     try {
-      this.UtilConfig = JSON.parse(readFileSync('./QBot.Config.json', { encoding: 'utf-8' }));
+      this.QBotConfig = JSON.parse(readFileSync('./QBot.Config.json').toString('utf-8'));
     } catch {
-      throw Error('[QBot] Language of QBot.Config.json is not a JSON! ');
+      throw Error('QBot.Config.json isn\'t a JSON File! ');
     };
-
-    if (!this.UtilConfig) {
-      throw Error('[QBot] QBot.Config.json read failed! ');
-    };
-    return true;
   };
 
-  /**
-   * @Todo 2023 02 18 Added.
-   * 
-   * @deprecated
-   * @param QConfig the Config of the QBot
-   * @description set the Config of the QBot.
-   */
-  public setConfig(QConfig: TQConfig) {
-  };
-
-  /**
-   * @description get the Config of the QBot
-   * @returns the Config data of the QBot.
-   */
-  public getConfig(): TQConfig { return this.UtilConfig };
-};
-// readFileSync
-// writeFile
-
-export type TQConfig = {
-  AllowCommonFunCommand: boolean,
-  QBotDataInfo: {
-    QNickName: string,
-    QUin: number,
-    QPassword: string
-  },
-  IsSingleMode: boolean,
-  Single: {
-    allowGroupsId: Array<number>,
-    allowCommands: Array<string>,
-    serversPath: Array<string>,
-    plugin: string,
-    groupsCallbackScript: string
+  public save() {
+    writeFileSync('./QBot.Config.json', this.QBotConfig.toString());
   }
+};
+export type TQBotConfig = {
+  QBotNickName: string,
+  QBotUin: number,
+  QBotPassword: string,
+  PluginConfig: {
+    IsSinglePlugin: true,
+    SinglePlugin: TPluginConfig,
+    MultiPlugins: TPluginConfig[]
+  }
+};
+export type TPluginConfig = {
+  AllowGroupId: number[],
+  AllowCommands: TAllowCommand[],
+  Name: string,
+  ProcessorScript: string
+  ControlServerPath: string,
+}
+export type TAllowCommand = {
+  Permission: 'User' | 'Admin' | 'Owner',
+  Command: string,
+  Alias: string,
+  CallbackId: number // Tips. 自己约定好对应值对应逻辑
 }

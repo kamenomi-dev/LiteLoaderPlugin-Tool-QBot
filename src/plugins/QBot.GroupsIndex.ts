@@ -1,0 +1,147 @@
+// import Nodejs Package
+import * as thread from "worker_threads";
+
+// import QBot Core
+import { Client, LogLevel } from "oicq";
+import { TPluginConfig, TQBotConfig } from "../utils/QBot.Util.Config.js";
+
+export class CQGroupIndex {
+  public constructor(QClient: Client, QBotConfig: TQBotConfig) {
+    QClient.on('message.group', async function (EventMessage) {
+      if (!EventMessage.atme)
+        return; // do not proc.
+      if (EventMessage.message[0].type != 'at')
+        return;
+
+      var pluginInfomation: TPluginConfig | undefined;
+      var pluginCallbackId: number = -1;
+      var pluginAllowCommandIdx: number = -1;
+      var recvArguments: any[];
+      const recvBotName = EventMessage.message[0].text || QBotConfig.QBotNickName;
+      const recvGroupId = EventMessage.group_id;
+      const recvGroupMsg = EventMessage.raw_message.slice(recvBotName.length + 1).trimStart();
+      const recvSenderUin = EventMessage.sender.user_id;
+
+      // QBot Command and Argument Parse.
+      // [Todo] 空格修复
+      ; (() => {
+        if (QBotConfig.PluginConfig.IsSinglePlugin) {
+          let singlePluginInfomation = QBotConfig.PluginConfig.SinglePlugin;
+
+          for (let commandIdx = 0; commandIdx < singlePluginInfomation.AllowCommands.length; commandIdx++) {
+            const selectCommand = singlePluginInfomation.AllowCommands[commandIdx];
+            let inputCommand = recvGroupMsg.slice(0, selectCommand.Command.length);
+            let inputAlias = recvGroupMsg.slice(0, selectCommand.Alias.length);
+
+            if (selectCommand.Command == inputCommand || selectCommand.Alias == inputAlias) {
+              pluginInfomation = singlePluginInfomation;
+              pluginAllowCommandIdx = commandIdx;
+              pluginCallbackId = selectCommand.CallbackId;
+              break;
+            };
+          };
+          return;
+        };
+
+        const multiPluginInfomation = QBotConfig.PluginConfig.MultiPlugins;
+        for (let pluginIdx = 0; pluginIdx < multiPluginInfomation.length; pluginIdx++) {
+          const pluginInfo = multiPluginInfomation[pluginIdx];
+
+          for (let commandIdx = 0; commandIdx < pluginInfo.AllowCommands.length; commandIdx++) {
+            const selectCommand = pluginInfo.AllowCommands[commandIdx];
+
+            let inputCommand = recvGroupMsg.slice(0, selectCommand.Command.length);
+            let inputAlias = recvGroupMsg.slice(0, selectCommand.Alias.length);
+
+            if (selectCommand.Command == inputCommand || selectCommand.Alias == inputAlias) {
+              pluginInfomation = pluginInfo;
+              pluginAllowCommandIdx = commandIdx;
+              pluginCallbackId = selectCommand.CallbackId;
+              break;
+            };
+          }
+        };
+      })();
+
+      if (typeof pluginInfomation == 'undefined' || pluginCallbackId == -1 || pluginAllowCommandIdx == -1)
+        return;
+
+      // Check permission
+      const senderPermission = EventMessage.sender.role;
+      const commandPermission = pluginInfomation.AllowCommands[pluginAllowCommandIdx].Permission;
+      if (commandPermission == 'Owner' && senderPermission != 'owner')
+        return;
+      if (commandPermission == 'Admin' && senderPermission == 'member')
+        return;
+
+      // Plugin Logic
+      ; (function (QClient: Client) {
+        return new Promise((resolve, reject) => {
+          QClient.logger.info(`[QBot] [GroupsIndex] scriptThread Create. SN: ${pluginInfomation?.Name} CAs: ${recvArguments} CallID: ${pluginCallbackId}`);
+          const scriptThread = new thread.Worker(pluginInfomation!.ProcessorScript, {
+            workerData: {
+              recvBotName: recvBotName,
+              recvGroupId: recvGroupId,
+              recvSenderUin: recvSenderUin,
+              recvArguments: recvArguments,
+              callbackId: pluginCallbackId,
+              currentConfig: pluginInfomation
+            } as TRecvPluginConf
+          });
+          const threadId = scriptThread.threadId
+
+          scriptThread.on('online', () => QClient.logger.info(`[QBot] [scriptThread Tdx: ${threadId}] Online! `));
+          scriptThread.on('error', error => QClient.logger.info(`[QBot] [scriptThread Tdx: ${threadId}] Error! \n${error}`));
+          scriptThread.on('exit', () => QClient.logger.info(`[QBot] [scriptThread Tdx: ${threadId}] Completed! `));
+
+          // if (false)
+          scriptThread.on('message', (callbackResult: TCallbackPlugin) => {
+            if (callbackResult.type == 'Log') {
+              if (callbackResult.logLevel == 'off') {
+                QClient.logger.error(`[QBot] [scriptThread Tdx: ${threadId}] Send unknown data! `)
+                return;
+              };
+              QClient.logger[callbackResult.logLevel](callbackResult.logData);
+              return;
+            };
+            var fixArguments = callbackResult.callArguments as any[];
+            fixArguments.map(argument => {
+              const typeArgument = typeof argument;
+              if (typeArgument == 'string') {
+                return `\`${argument}WHY\``;
+              } else {
+                return argument;
+              };
+            });
+            QClient.logger.info(fixArguments);
+            if (callbackResult.type == 'Client') {
+              eval(`QClient.${callbackResult.callCommand}(${fixArguments.toString()})`);
+            }
+
+            if (callbackResult.type == 'EventMessage') {
+              eval(`EventMessage.${callbackResult.callCommand}(${fixArguments.toString()})`);
+            };
+          });
+        })
+      })(QClient);
+    });
+  };
+};
+
+export type TRecvPluginConf = {
+  recvBotName: string,
+  recvGroupId: number,
+  recvSenderUin: number,
+  recvArguments: any[],
+  callbackId: number,
+  currentConfig: TPluginConfig
+};
+export type TCallbackPlugin = {
+  type: 'Log',
+  logLevel: LogLevel,
+  logData: string
+} | {
+  type: 'Client' | "EventMessage",
+  callCommand: string,
+  callArguments: any[]
+};
